@@ -1,0 +1,68 @@
+#Rulin Huang 5140379001
+#Execution begins at address 0
+           .pos 0
+ init:
+            irmovl Stack, %esp             #Set up stack pointer
+            irmovl Stack, %ebp             #Set up base pointer
+            jmp Main                       #Execute main program
+
+            .align 4
+#Source block
+src:
+            .long 0x00a
+            .long 0x0b0
+            .long 0xc00
+
+#Destination block
+dest:
+            .long 0x111
+            .long 0x222
+            .long 0x333
+
+Main:
+             irmovl $3, %edx               #int len
+             pushl %edx
+             irmovl dest, %edx             #int *dest
+             pushl %edx
+             irmovl src, %edx              #int *src
+             pushl %edx
+             irmovl $0, %eax
+             call Copy
+             halt
+
+        #int copy_block(int *src, int *dest, int len)
+Copy:
+             pushl %ebp
+             rrmovl %esp, %ebp
+             irmovl $0, %eax
+
+             mrmovl 0x10(%ebp), %ebx       #Get int len
+             mrmovl 0xc(%ebp), %ecx        #Get int *dest
+             mrmovl 0x8(%ebp), %edx        #Get int *src
+
+ Loop:
+             andl %ebx, %ebx               #Set condition code
+             je End
+
+             mrmovl (%edx), %edi           #int val = *src
+             rmmovl %edi, (%ecx)           #*dest = val;
+
+             irmovl $4, %esi
+             addl %esi, %ecx               #*dest++
+             addl %esi, %edx               #*src++
+
+             xorl %edi, %eax               #result ^= val;
+
+             irmovl $-1, %esi
+             addl %esi, %ebx
+
+             jmp Loop
+
+End:
+           rrmovl %ebp, %esp
+           popl %ebp
+           ret
+
+   #The stack starts here and grows to lower addresses
+                .pos 0x100
+Stack:           

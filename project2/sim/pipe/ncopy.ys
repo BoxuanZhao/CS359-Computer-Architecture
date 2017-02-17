@@ -1,0 +1,257 @@
+#Rulin Huang 5140379001
+
+#Use the new instruction iaddl to replace irmovl+addl
+#Do more work in one loop so that we can reduce the number of loops
+#Use jump table when the number of the test datas in one file is less than the work done in one loop to speed up
+#Two IMRMOVLs are written together to avoid load/use hazard
+
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len ints to dst.
+# Return the number of positive ints (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# Describe how and why you modified the baseline code.
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+ncopy:	pushl %ebp		# Save old frame pointer
+	rrmovl %esp,%ebp	# Set up new frame pointer
+	pushl %esi		# Save callee-save regs
+	pushl %ebx
+	pushl %edi
+	mrmovl 8(%ebp),%ebx	# src
+	mrmovl 16(%ebp),%edx	# len
+	mrmovl 12(%ebp),%ecx	# dst
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	iaddl $-16, %edx
+	irmovl $0,%eax			# count = 0;
+	jle Nloop
+Loop:
+L1: mrmovl (%ebx), %esi		# val1 = src[0]
+    mrmovl 4(%ebx), %edi	# val2 = src[1]
+    rmmovl %esi, (%ecx)		# dst[0] = val1
+    rmmovl %edi , 4(%ecx)	# dst[1] = val2
+    andl %esi, %esi			# if val1 > 0
+    jle L2 				
+    iaddl $1, %eax			# count++
+L2: andl %edi, %edi			# if val2 > 0
+	jle L3 					
+	iaddl $1, %eax			# count ++
+L3: mrmovl 8(%ebx), %esi	# val1 = src[2]
+    mrmovl 12(%ebx), %edi 	# val2 = src[3]
+    rmmovl %esi, 8(%ecx)	# dst[2] = val1
+	rmmovl %edi , 12(%ecx)  # dst[3] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L4
+	iaddl $1, %eax			# count ++
+L4: andl %edi, %edi			# if val2 > 0
+	jle L5 					
+	iaddl $1, %eax 			# count ++
+L5: mrmovl 16(%ebx), %esi 	# val1 = src[4]
+	mrmovl 20(%ebx), %edi	# val2 = src[5]
+	rmmovl %esi, 16(%ecx)	# dst[4] = val1
+	rmmovl %edi , 20(%ecx)	# dst[5] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L6
+	iaddl $1, %eax 			# count ++
+L6: andl %edi, %edi			# if val2 > 0
+	jle L7
+	iaddl $1, %eax			# count ++
+L7: mrmovl 24(%ebx), %esi 	# val1 = src[6]
+	mrmovl 28(%ebx), %edi 	# val2 = src[7]
+	rmmovl %esi, 24(%ecx)	# dst[6] = val1
+	rmmovl %edi , 28(%ecx)	# dst[7] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L8
+	iaddl $1, %eax			# count ++
+L8: andl %edi, %edi			# if val2 > 0
+	jle L9
+	iaddl $1, %eax			# count ++
+L9: mrmovl 32(%ebx), %esi 	# val1 = src[8]
+	mrmovl 36(%ebx), %edi 	# val2 = src[9]
+	rmmovl %esi, 32(%ecx)	# dst[8] = val1
+	rmmovl %edi , 36(%ecx)	# dst[9] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L10
+	iaddl $1, %eax			# count ++
+L10: andl %edi, %edi		# if val2 > 0
+	jle L11
+	iaddl $1, %eax			# count ++
+L11: mrmovl 40(%ebx), %esi 	# val1 = src[10]
+	mrmovl 44(%ebx), %edi 	# val2 = src[11]
+	rmmovl %esi, 40(%ecx)	# dst[10] = val1
+	rmmovl %edi , 44(%ecx)	# dst[11] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L12
+	iaddl $1, %eax			# count ++
+L12: andl %edi, %edi		# if val2 > 0
+	jle L13
+	iaddl $1, %eax			# count ++
+L13: mrmovl 48(%ebx), %esi 	# val1 = src[12]
+	mrmovl 52(%ebx), %edi 	# val2 = src[13]
+	rmmovl %esi, 48(%ecx)	# dst[12] = val1
+	rmmovl %edi , 52(%ecx)	# dst[13] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L14
+	iaddl $1, %eax			# count ++
+L14: andl %edi, %edi		# if val2 > 0
+	jle L15
+	iaddl $1, %eax			# count ++
+L15: mrmovl 56(%ebx), %esi 	# val1 = src[14]
+	mrmovl 60(%ebx), %edi 	# val2 = src[15]
+	rmmovl %esi, 56(%ecx)	# dst[14] = val1
+	rmmovl %edi , 60(%ecx)	# dst[15] = val2
+	andl %esi, %esi			# if val1 > 0
+	jle L16
+	iaddl $1, %eax			# count ++
+L16: andl %edi, %edi		# if val2 > 0
+	jle L
+	iaddl $1, %eax			# count ++
+L:  iaddl $64, %ebx			# (int*)src += 16
+	iaddl $64, %ecx			# (int*)dst += 16
+	andl %edx, %edx			# no meaning
+	iaddl $-16, %edx		# len -= 16; if len > 0 {goto Loop}
+	jg Loop
+
+Nloop:
+	iaddl $16, %edx			# len += 16
+	addl %edx, %edx			# len = len + len
+	addl %edx, %edx			# len = len + len (len = 4* len)
+	mrmovl JT(%edx), %edx	# jump address = JT + len
+	pushl %edx				# push jump address to stack
+	ret 					# jump to jump address
+
+JT16: mrmovl 60(%ebx), %esi # val = src[15]
+	rmmovl %esi, 60(%ecx)	# dst[15] = val
+	andl %esi, %esi			# if val > 0
+	jle JT15
+	iaddl $1, %eax			# count ++
+JT15: mrmovl 56(%ebx), %esi # val = src[14]
+	rmmovl %esi, 56(%ecx)	# dst[14] = val
+	andl %esi, %esi			# if val > 0
+	jle JT14
+	iaddl $1, %eax			# count ++
+JT14: mrmovl 52(%ebx), %esi # val = src[13]
+	rmmovl %esi, 52(%ecx)	# dst[13] = val
+	andl %esi, %esi			# if val > 0
+	jle JT13
+	iaddl $1, %eax			# count ++
+JT13: mrmovl 48(%ebx), %esi # val = src[12]
+	rmmovl %esi, 48(%ecx)	# dst[12] = val
+	andl %esi, %esi			# if val > 0
+	jle JT12
+	iaddl $1, %eax			# count ++
+JT12: mrmovl 44(%ebx), %esi # val = src[11]
+	rmmovl %esi, 44(%ecx)	# dst[11] = val
+	andl %esi, %esi			# if val > 0
+	jle JT11
+	iaddl $1, %eax			# count ++
+JT11: mrmovl 40(%ebx), %esi # val = src[10]
+	rmmovl %esi, 40(%ecx)	# dst[10] = val
+	andl %esi, %esi			# if val > 0
+	jle JT10
+	iaddl $1, %eax			# count ++
+JT10: mrmovl 36(%ebx), %esi # val = src[9]
+	rmmovl %esi, 36(%ecx)	# dst[9] = val
+	andl %esi, %esi			# if val > 0
+	jle JT9
+	iaddl $1, %eax			# count ++
+JT9: mrmovl 32(%ebx), %esi	# val = src[8]
+	rmmovl %esi, 32(%ecx)	# dst[8] = val
+	andl %esi, %esi			# if val > 0
+	jle JT8
+	iaddl $1, %eax			# count ++
+JT8: mrmovl 28(%ebx), %esi	# val = src[7]
+	rmmovl %esi, 28(%ecx)	# dst[7] = val
+	andl %esi, %esi			# if val > 0
+	jle JT7
+	iaddl $1, %eax			# count ++
+JT7: mrmovl 24(%ebx), %esi	# val = src[6]
+	rmmovl %esi, 24(%ecx)	# dst[6] = val
+	andl %esi, %esi			# if val > 0
+	jle JT6
+	iaddl $1, %eax			# count ++
+JT6: mrmovl 20(%ebx), %esi	# val = src[5]
+	rmmovl %esi, 20(%ecx)	# dst[5] = val
+	andl %esi, %esi			# if val > 0
+	jle JT5
+	iaddl $1, %eax			# count ++
+JT5: mrmovl 16(%ebx), %esi	# val = src[4]
+	rmmovl %esi, 16(%ecx)	# dst[4] = val
+	andl %esi, %esi			# if val > 0
+	jle JT4
+	iaddl $1, %eax			# count ++
+JT4: mrmovl 12(%ebx), %esi	# val = src[3]
+	rmmovl %esi, 12(%ecx)	# dst[3] = val
+	andl %esi, %esi			# if val > 0
+	jle JT3
+	iaddl $1, %eax			# count ++
+JT3: mrmovl 8(%ebx), %esi	# val = src[2]
+	rmmovl %esi, 8(%ecx)	# dst[2] = val
+	andl %esi, %esi			# if val > 0
+	jle JT2
+	iaddl $1, %eax			# count ++
+JT2: mrmovl 4(%ebx), %esi	# val = src[1]
+	rmmovl %esi, 4(%ecx)	# dst[1] = val
+	andl %esi, %esi			# if val > 0
+	jle JT1
+	iaddl $1, %eax			# count ++
+JT1: mrmovl (%ebx), %esi	# val = src[0]
+	rmmovl %esi, (%ecx)		# dst[0] = val
+	andl %esi, %esi			# if val > 0
+	jle Return
+	iaddl $1, %eax			# count ++
+Return: jmp Done
+
+Done:
+popl %edi               # Restore callee-save registers
+popl %ebx
+popl %esi
+leave
+ret
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	popl %edi               # Restore callee-save registers
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
+##################################################################
+# Keep the following label at the end of your function
+
+#-------------------------------------------------
+       .align 4
+  JT: .long Return			# jump table
+       .long JT1
+       .long JT2
+       .long JT3
+       .long JT4
+       .long JT5
+       .long JT6
+       .long JT7
+       .long JT8
+       .long JT9
+       .long JT10
+       .long JT11
+       .long JT12
+       .long JT13
+       .long JT14
+       .long JT15
+       .long JT16
+
+
+
+
+
+End:
+#/* $end ncopy-ys */
